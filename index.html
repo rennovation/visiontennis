@@ -117,7 +117,7 @@ body{min-height:100vh;background:#060a14;font-family:'DM Sans','Segoe UI',sans-s
     <div style="width:320px;height:1px;background:white;margin:4px auto 6px auto;opacity:0.6;"></div>
     <div style="font-size:13px;font-weight:600;color:#00A896;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;text-align:center;">Powered by <span style="color:#ADF305;font-weight:800;">Victor Reinert</span></div>
     <p class="subtitle" style="color:white;">Análise quadro a quadro · Analise Posicional · Insights de treinamento · <span style="color:#ADF305;">Relatório Analítico Individual</span></p>
-    <div style="font-size:11px;color:#4a5568;text-align:center;margin-top:4px;letter-spacing:1px;">Versão 1.4</div>
+    <div style="font-size:11px;color:#4a5568;text-align:center;margin-top:4px;letter-spacing:1px;">Versão 1.5</div>
   </div>
 
   <div id="key-box">
@@ -20578,24 +20578,35 @@ function cleanBase64(dataUrl) {
 }
 
 // ── XHR helper (mais compatível com iOS que fetch+JSON.stringify) ─────────────
-function xhrPost(url, payload) {
+function xhrPost(url, b64) {
   return new Promise(function(resolve, reject) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', url, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.timeout = 60000;
+    xhr.timeout = 90000;
     xhr.onload = function() {
-      try { resolve({ ok: xhr.status < 400, status: xhr.status, data: JSON.parse(xhr.responseText) }); }
-      catch(e) { reject(new Error('Resposta inválida do servidor')); }
+      var raw = xhr.responseText || '';
+      if (!raw) { reject(new Error('Resposta vazia do servidor (status ' + xhr.status + ')')); return; }
+      // Mostrar primeiros 120 chars da resposta no debug para diagnóstico
+      if (xhr.status >= 400) {
+        logDebug('Servidor retornou erro ' + xhr.status + ': ' + raw.slice(0, 120));
+        reject(new Error('Erro servidor ' + xhr.status));
+        return;
+      }
+      try {
+        var data = JSON.parse(raw);
+        resolve(data);
+      } catch(e) {
+        logDebug('Resposta nao-JSON (' + raw.length + ' chars): ' + raw.slice(0, 120));
+        reject(new Error('Resposta nao-JSON: ' + raw.slice(0, 80)));
+      }
     };
-    xhr.onerror   = function() { reject(new Error('Erro de rede')); };
-    xhr.ontimeout = function() { reject(new Error('Timeout')); };
-    // Serializa campo a campo para evitar stringify de string muito grande de uma vez
-    var b64 = payload.imageBase64;
+    xhr.onerror   = function() { reject(new Error('Erro de rede (CORS ou offline)')); };
+    xhr.ontimeout = function() { reject(new Error('Timeout 90s')); };
+    // Monta JSON manualmente com Blob — evita JSON.stringify de string grande no iOS
     var prefix = '{"imageBase64":"';
     var suffix = '","mediaType":"image/jpeg"}';
-    var blob = new Blob([prefix, b64, suffix], { type: 'application/json' });
-    xhr.send(blob);
+    xhr.send(new Blob([prefix, b64, suffix], { type: 'application/json' }));
   });
 }
 
@@ -20643,9 +20654,13 @@ async function analyzeFrame(frame) {
 
     } else {
       // Netlify: usa XHR com Blob para evitar JSON.stringify no iOS
-      var r = await xhrPost('/api/analyze', { imageBase64: base64 });
-      if (!r.ok) { logDebug('Erro Function: ' + (r.data&&r.data.error||r.status)); return {_error:'Function error'}; }
-      return r.data;
+      try {
+        var r = await xhrPost('/api/analyze', base64);
+        return r;
+      } catch(xhrErr) {
+        logDebug('XHR erro: ' + xhrErr.message);
+        return { _error: xhrErr.message };
+      }
     }
   } catch(err) {
     logDebug('Erro: ' + err.message);

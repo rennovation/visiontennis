@@ -1,48 +1,49 @@
 // netlify/functions/analyze.js
 // Netlify Serverless Function — proxy seguro para a API da Anthropic
-// A chave da API fica APENAS no servidor (variável de ambiente do Netlify)
-// nunca exposta no browser ou no código frontend.
 
 exports.handler = async function(event, context) {
 
-  // Apenas POST é permitido
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Método não permitido. Use POST.' })
-    };
+  // CORS headers para iOS Safari
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  };
+
+  // Preflight OPTIONS
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers: corsHeaders, body: '' };
   }
 
-  // Verificar se a chave da API está configurada no Netlify
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, headers: corsHeaders, body: JSON.stringify({ error: 'Use POST.' }) };
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'ANTHROPIC_API_KEY não configurada nas variáveis de ambiente do Netlify.' })
-    };
+    return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: 'ANTHROPIC_API_KEY nao configurada.' }) };
+  }
+
+  // Netlify pode base64-encodar o body quando vem de Blob/XHR do iOS
+  let rawBody = event.body || '';
+  if (event.isBase64Encoded) {
+    rawBody = Buffer.from(rawBody, 'base64').toString('utf8');
   }
 
   let body;
   try {
-    body = JSON.parse(event.body);
+    body = JSON.parse(rawBody);
   } catch (e) {
     return {
-      statusCode: 400,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Body inválido. Envie JSON.' })
+      statusCode: 400, headers: corsHeaders,
+      body: JSON.stringify({ error: 'Body invalido: ' + e.message + ' | raw: ' + rawBody.slice(0, 80) })
     };
   }
 
   const { imageBase64, mediaType } = body;
-
   if (!imageBase64) {
-    return {
-      statusCode: 400,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Campo imageBase64 é obrigatório.' })
-    };
+    return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'imageBase64 obrigatorio.' }) };
   }
 
   const PROMPT = `Você é um treinador de tênis especialista e analista de biomecânica. Analise este quadro de vídeo.
@@ -68,18 +69,8 @@ phase: preparation|backswing|contact|follow_through|recovery|idle
         messages: [{
           role: 'user',
           content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: mediaType || 'image/jpeg',
-                data: imageBase64
-              }
-            },
-            {
-              type: 'text',
-              text: PROMPT
-            }
+            { type: 'image', source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: imageBase64 } },
+            { type: 'text', text: PROMPT }
           ]
         }]
       })
@@ -88,43 +79,23 @@ phase: preparation|backswing|contact|follow_through|recovery|idle
     const data = await response.json();
 
     if (!response.ok) {
-      return {
-        statusCode: response.status,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: data?.error?.message || 'Erro na API da Anthropic.' })
-      };
+      return { statusCode: response.status, headers: corsHeaders,
+               body: JSON.stringify({ error: data?.error?.message || 'Erro Anthropic.' }) };
     }
 
-    // Extrair o texto da resposta
     const text = data.content?.find(b => b.type === 'text')?.text || '{}';
-
-    // Extrair JSON robusto — pega tudo entre { e }
     const start = text.indexOf('{');
     const end   = text.lastIndexOf('}');
     if (start === -1 || end === -1) {
-      return {
-        statusCode: 500,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'Resposta da IA não contém JSON válido.', raw: text.slice(0, 100) })
-      };
+      return { statusCode: 500, headers: corsHeaders,
+               body: JSON.stringify({ error: 'IA nao retornou JSON.', raw: text.slice(0, 100) }) };
     }
 
     const parsed = JSON.parse(text.slice(start, end + 1));
-
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
-      body: JSON.stringify(parsed)
-    };
+    return { statusCode: 200, headers: corsHeaders, body: JSON.stringify(parsed) };
 
   } catch (err) {
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Erro interno: ' + err.message })
-    };
+    return { statusCode: 500, headers: corsHeaders,
+             body: JSON.stringify({ error: 'Erro interno: ' + err.message }) };
   }
 };
