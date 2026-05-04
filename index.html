@@ -117,7 +117,7 @@ body{min-height:100vh;background:#060a14;font-family:'DM Sans','Segoe UI',sans-s
     <div style="width:320px;height:1px;background:white;margin:4px auto 6px auto;opacity:0.6;"></div>
     <div style="font-size:13px;font-weight:600;color:#00A896;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;text-align:center;">Powered by <span style="color:#ADF305;font-weight:800;">Victor Reinert</span></div>
     <p class="subtitle" style="color:white;">Análise quadro a quadro · Analise Posicional · Insights de treinamento · <span style="color:#ADF305;">Relatório Analítico Individual</span></p>
-    <div style="font-size:11px;color:#4a5568;text-align:center;margin-top:4px;letter-spacing:1px;">Versão 1.1</div>
+    <div style="font-size:11px;color:#4a5568;text-align:center;margin-top:4px;letter-spacing:1px;">Versão 1.2</div>
   </div>
 
   <div id="key-box">
@@ -20465,60 +20465,72 @@ function extractFrames(file) {
       for (var i = 0; i < total; i++) times.push(i * FRAME_SEC);
       var out   = [];
       videoInfo = { name: file.name, duration: dur.toFixed(1), frames: total };
-      progMeta.innerHTML = '<span>📁 '+file.name+'</span><span>⏱ '+dur.toFixed(1)+'s</span><span>🖼 '+total+' quadros para selecionar</span>';
+      progMeta.innerHTML = '<span>📁 '+file.name+'</span><span>⏱ '+dur.toFixed(1)+'s</span><span>🖼 até '+total+' quadros</span>';
+      if (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+        progLabel.textContent = '📱 iOS: reproduzindo vídeo para capturar quadros…';
+      }
 
       // Detecta iOS Safari
       var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
       if (isIOS) {
-        // iOS: método play → pause → capture para cada frame
-        // É o único método 100% confiável no Safari iOS
-        vid.removeAttribute('preload');
-        vid.load();
+        // iOS: único método 100% confiável — reproduz o vídeo e captura durante playback
+        // O Safari bloqueia seek sem interação do usuário, mas permite play() de blob
+        var captured    = {};   // { timeKey: dataUrl } — evita duplicatas
+        var lastCapTime = -999;
+        var minGap      = FRAME_SEC * 0.85; // captura se >= 85% do intervalo passou
 
-        var frameIdx  = 0;
-        var capturing = false;
-
-        function captureAndNext() {
-          if (capturing) return;
-          capturing = true;
-
-          // Capturar frame atual
+        function doCapture(t) {
           cvs.width  = vid.videoWidth  || 640;
           cvs.height = vid.videoHeight || 360;
           try {
             cvs.getContext('2d').drawImage(vid, 0, 0, cvs.width, cvs.height);
-            var dataUrl = cvs.toDataURL('image/jpeg', 0.6);
-            if (dataUrl && dataUrl.length > 200 && dataUrl !== 'data:,') {
-              out.push({ dataUrl: dataUrl, time: times[frameIdx], analysis: null, error: null });
-              setProgress(Math.round((out.length / times.length) * 30));
+            var dataUrl = cvs.toDataURL('image/jpeg', 0.65);
+            if (dataUrl && dataUrl.length > 300 && dataUrl !== 'data:,') {
+              // Arredonda para o segundo mais próximo como chave
+              var key = Math.round(t);
+              if (!captured[key]) {
+                captured[key] = { dataUrl: dataUrl, time: t };
+                var cnt = Object.keys(captured).length;
+                setProgress(Math.min(28, Math.round((cnt / total) * 28)));
+              }
             }
-          } catch(e) { logDebug('Captura: ' + e.message); }
+          } catch(e) {}
+        }
 
-          frameIdx++;
-          capturing = false;
-
-          if (frameIdx >= times.length) {
-            vid.pause();
-            vid.removeEventListener('seeked', onSeeked);
-            URL.revokeObjectURL(url);
-            resolve(out);
-            return;
+        vid.ontimeupdate = function() {
+          var t = vid.currentTime;
+          if (t - lastCapTime >= minGap) {
+            lastCapTime = t;
+            doCapture(t);
           }
-          // Seek para o próximo frame
-          vid.currentTime = times[frameIdx];
-        }
+        };
 
-        function onSeeked() {
-          // Pequeno delay para garantir que o frame foi renderizado no iOS
-          setTimeout(captureAndNext, 80);
-        }
+        vid.onended = function() {
+          vid.ontimeupdate = null;
+          vid.onended = null;
+          // Montar array ordenado por tempo
+          Object.values(captured)
+            .sort(function(a,b){ return a.time - b.time; })
+            .slice(0, MAX_FRAMES)
+            .forEach(function(f){
+              out.push({ dataUrl: f.dataUrl, time: f.time, analysis: null, error: null });
+            });
+          URL.revokeObjectURL(url);
+          resolve(out);
+        };
 
-        vid.addEventListener('seeked', onSeeked);
-
-        // Iniciar no primeiro frame
-        vid.currentTime = times[0];
+        // Se o vídeo for muito longo, acelerar a 4x para não esperar
+        vid.playbackRate = dur > 30 ? 4.0 : (dur > 15 ? 2.0 : 1.0);
+        vid.play().catch(function(e) {
+          logDebug('iOS play() falhou: ' + e.message + ' — tente tocar a tela primeiro');
+          // Fallback: tentar sem autoplay
+          vid.ontimeupdate = null;
+          URL.revokeObjectURL(url);
+          resolve([]);
+        });
 
       } else {
         // Desktop: método onseeked original
