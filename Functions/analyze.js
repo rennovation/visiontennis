@@ -1,101 +1,120 @@
-// netlify/functions/analyze.js
-// Netlify Serverless Function — proxy seguro para a API da Anthropic
+// functions/analyze.js
+// Netlify Serverless Function — usa https nativo do Node.js (compativel com Node 14+)
 
-exports.handler = async function(event, context) {
+const https = require('https');
 
-  // CORS headers para iOS Safari
-  const corsHeaders = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS'
-  };
+const CORS = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
+};
 
-  // Preflight OPTIONS
+const PROMPT = 'Voce e um treinador de tenis especialista. Analise este quadro de video de tenis.\n\nRetorne APENAS um objeto JSON puro (sem markdown, sem texto extra, sem backticks):\n{"player_detected":true,"ball_detected":false,"stroke_type":"forehand","phase":"preparation","body_position":"descricao","coaching_note":"observacao em portugues","score":8,"racquet_angle":90,"wrist_angle":160,"hip_rotation":45,"knee_bend":140,"head_stability":8}\n\nstroke_type: forehand|backhand|serve|volley|overhead|movement|unknown|none\nphase: preparation|backswing|contact|follow_through|recovery|idle\nAngulos podem ser null se nao visiveis.';
+
+function callAnthropic(apiKey, imageBase64) {
+  return new Promise(function(resolve, reject) {
+    var payload = JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 800,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 } },
+          { type: 'text', text: PROMPT }
+        ]
+      }]
+    });
+
+    var options = {
+      hostname: 'api.anthropic.com',
+      path: '/v1/messages',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload),
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      }
+    };
+
+    var req = https.request(options, function(res) {
+      var data = '';
+      res.on('data', function(chunk) { data += chunk; });
+      res.on('end', function() {
+        try { resolve({ status: res.statusCode, body: JSON.parse(data) }); }
+        catch(e) { reject(new Error('Resposta invalida: ' + data.slice(0,100))); }
+      });
+    });
+
+    req.on('error', function(e) { reject(e); });
+    req.setTimeout(60000, function() { req.destroy(); reject(new Error('Timeout')); });
+    req.write(payload);
+    req.end();
+  });
+}
+
+exports.handler = async function(event) {
+
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers: corsHeaders, body: '' };
+    return { statusCode: 200, headers: CORS, body: '' };
   }
 
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers: corsHeaders, body: JSON.stringify({ error: 'Use POST.' }) };
+    return { statusCode: 405, headers: CORS, body: JSON.stringify({ error: 'Use POST.' }) };
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return { statusCode: 500, headers: corsHeaders, body: JSON.stringify({ error: 'ANTHROPIC_API_KEY nao configurada.' }) };
+    return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: 'ANTHROPIC_API_KEY nao configurada.' }) };
   }
 
-  // Netlify pode base64-encodar o body quando vem de Blob/XHR do iOS
   let rawBody = event.body || '';
   if (event.isBase64Encoded) {
     rawBody = Buffer.from(rawBody, 'base64').toString('utf8');
   }
 
-  let body;
+  let parsed;
   try {
-    body = JSON.parse(rawBody);
-  } catch (e) {
+    parsed = JSON.parse(rawBody);
+  } catch(e) {
     return {
-      statusCode: 400, headers: corsHeaders,
-      body: JSON.stringify({ error: 'Body invalido: ' + e.message + ' | raw: ' + rawBody.slice(0, 80) })
+      statusCode: 400, headers: CORS,
+      body: JSON.stringify({ error: 'JSON invalido: ' + e.message + ' | recebido: ' + rawBody.slice(0,80) })
     };
   }
 
-  const { imageBase64, mediaType } = body;
+  const { imageBase64 } = parsed;
   if (!imageBase64) {
-    return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'imageBase64 obrigatorio.' }) };
+    return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'imageBase64 obrigatorio.' }) };
   }
 
-  const PROMPT = `Você é um treinador de tênis especialista e analista de biomecânica. Analise este quadro de vídeo.
-
-Retorne APENAS um objeto JSON puro (sem markdown, sem texto extra, sem \`\`\`):
-{"player_detected":true,"ball_detected":false,"stroke_type":"forehand","phase":"preparation","body_position":"descrição","coaching_note":"observação em português","score":8,"racquet_angle":90,"wrist_angle":160,"hip_rotation":45,"knee_bend":140,"head_stability":8}
-
-stroke_type: forehand|backhand|serve|volley|overhead|movement|unknown|none
-phase: preparation|backswing|contact|follow_through|recovery|idle
-Ângulos e head_stability podem ser null se não visíveis.`;
-
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 800,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: imageBase64 } },
-            { type: 'text', text: PROMPT }
-          ]
-        }]
-      })
-    });
+    var result = await callAnthropic(apiKey, imageBase64);
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      return { statusCode: response.status, headers: corsHeaders,
-               body: JSON.stringify({ error: data?.error?.message || 'Erro Anthropic.' }) };
+    if (result.status >= 400) {
+      return {
+        statusCode: result.status, headers: CORS,
+        body: JSON.stringify({ error: (result.body && result.body.error && result.body.error.message) || 'Erro Anthropic ' + result.status })
+      };
     }
 
-    const text = data.content?.find(b => b.type === 'text')?.text || '{}';
-    const start = text.indexOf('{');
-    const end   = text.lastIndexOf('}');
+    var text = '';
+    var content = (result.body && result.body.content) || [];
+    for (var i = 0; i < content.length; i++) {
+      if (content[i].type === 'text') { text = content[i].text; break; }
+    }
+
+    var start = text.indexOf('{');
+    var end   = text.lastIndexOf('}');
     if (start === -1 || end === -1) {
-      return { statusCode: 500, headers: corsHeaders,
-               body: JSON.stringify({ error: 'IA nao retornou JSON.', raw: text.slice(0, 100) }) };
+      return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: 'IA nao retornou JSON', raw: text.slice(0,100) }) };
     }
 
-    const parsed = JSON.parse(text.slice(start, end + 1));
-    return { statusCode: 200, headers: corsHeaders, body: JSON.stringify(parsed) };
+    var analysis = JSON.parse(text.slice(start, end + 1));
+    return { statusCode: 200, headers: CORS, body: JSON.stringify(analysis) };
 
-  } catch (err) {
-    return { statusCode: 500, headers: corsHeaders,
-             body: JSON.stringify({ error: 'Erro interno: ' + err.message }) };
+  } catch(err) {
+    return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: 'Erro: ' + err.message }) };
   }
 };
