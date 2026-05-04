@@ -2,19 +2,23 @@
 # Configuração do projeto Tennis Vision no Netlify
 
 [build]
-  publish = "."                        # pasta raiz com o HTML
-  functions = "netlify/functions"      # pasta das funções serverless
+  publish = "."
+  functions = "netlify/functions"
 
-# Redireciona /api/analyze para a Netlify Function
-[[redirects]]
-  from = "/api/analyze"
-  to = "/.netlify/functions/analyze"
-  status = 200
+[functions]
+  directory = "netlify/functions"
 
 # Headers de segurança
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "DENY"
+    X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "POST, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type"
