@@ -3,10 +3,10 @@
 
 [build]
   publish = "."
-  functions = "netlify/functions"
+  functions = "functions"
 
 [functions]
-  directory = "netlify/functions"
+  directory = "functions"
 
 # Headers de segurança
 [[headers]]
