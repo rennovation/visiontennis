@@ -117,7 +117,7 @@ body{min-height:100vh;background:#060a14;font-family:'DM Sans','Segoe UI',sans-s
     <div style="width:320px;height:1px;background:white;margin:4px auto 6px auto;opacity:0.6;"></div>
     <div style="font-size:13px;font-weight:600;color:#00A896;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;text-align:center;">Powered by <span style="color:#ADF305;font-weight:800;">Victor Reinert</span></div>
     <p class="subtitle" style="color:white;">Análise quadro a quadro · Analise Posicional · Insights de treinamento · <span style="color:#ADF305;">Relatório Analítico Individual</span></p>
-    <div style="font-size:11px;color:#4a5568;text-align:center;margin-top:4px;letter-spacing:1px;">Versão 2.0</div>
+    <div style="font-size:11px;color:#4a5568;text-align:center;margin-top:4px;letter-spacing:1px;">Versão 2.1</div>
   </div>
 
   <div id="key-box">
@@ -20587,20 +20587,15 @@ async function testarFuncao() {
   for (var i = 0; i < urls.length; i++) {
     try {
       var xhr = new XMLHttpRequest();
-      xhr.open('POST', urls[i], false); // sincrono para teste rapido
+      xhr.open('POST', urls[i], false);
       xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.send('{}');
       if (xhr.status !== 404) {
-        logDebug('Funcao encontrada em: ' + urls[i] + ' (status ' + xhr.status + ')');
         return urls[i];
-      } else {
-        logDebug('404 em: ' + urls[i]);
       }
-    } catch(e) {
-      logDebug('Erro testando ' + urls[i] + ': ' + e.message);
-    }
+    } catch(e) { /* continua */ }
   }
-  logDebug('FUNCAO NAO ENCONTRADA em nenhuma URL. Verifique o Netlify Dashboard > Functions.');
+  logDebug('Função de análise não encontrada. Verifique o Netlify Dashboard > Functions.');
   return null;
 }
 
@@ -20615,12 +20610,13 @@ function xhrPost(url, b64) {
       var raw = xhr.responseText || '';
       if (!raw) { reject(new Error('Resposta vazia (status ' + xhr.status + ')')); return; }
       if (xhr.status >= 400) {
-        logDebug('Servidor erro ' + xhr.status + ': ' + raw.slice(0, 120));
+        // 400 = frame rejeitado (silencioso), 5xx = erro real (loga)
+        if (xhr.status >= 500) logDebug('Erro servidor ' + xhr.status + ': ' + raw.slice(0, 80));
         reject(new Error('Erro servidor ' + xhr.status));
         return;
       }
       try { resolve(JSON.parse(raw)); }
-      catch(e) { logDebug('Resposta nao-JSON: ' + raw.slice(0,120)); reject(new Error('Resposta nao-JSON')); }
+      catch(e) { logDebug('Resposta nao-JSON: ' + raw.slice(0,80)); reject(new Error('Resposta nao-JSON')); }
     };
     xhr.onerror   = function() { reject(new Error('Erro de rede')); };
     xhr.ontimeout = function() { reject(new Error('Timeout 90s')); };
@@ -20639,7 +20635,6 @@ async function analyzeFrame(frame) {
   // Reencoda via canvas limpo
   var base64 = await cleanBase64(frame.dataUrl);
   if (!base64 || base64.length < 50) {
-    logDebug('Reencode falhou no frame ' + frame.time + 's');
     return { _error: 'Frame inválido' };
   }
 
@@ -20682,7 +20677,12 @@ async function analyzeFrame(frame) {
         var r = await xhrPost(funcUrl, base64);
         return r;
       } catch(xhrErr) {
-        logDebug('XHR erro: ' + xhrErr.message);
+        // Status 400 = frame rejeitado pelo servidor (vazio/corrompido) — ignorar silenciosamente
+        if (xhrErr.message && xhrErr.message.indexOf('400') !== -1) {
+          return { _error: 'Frame ignorado' };
+        }
+        // Outros erros de rede merecem log
+        logDebug('Erro de rede: ' + xhrErr.message);
         return { _error: xhrErr.message };
       }
     }
