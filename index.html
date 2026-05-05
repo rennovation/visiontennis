@@ -117,7 +117,7 @@ body{min-height:100vh;background:#060a14;font-family:'DM Sans','Segoe UI',sans-s
     <div style="width:320px;height:1px;background:white;margin:4px auto 6px auto;opacity:0.6;"></div>
     <div style="font-size:13px;font-weight:600;color:#00A896;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;text-align:center;">Powered by <span style="color:#ADF305;font-weight:800;">Victor Reinert</span></div>
     <p class="subtitle" style="color:white;">Análise quadro a quadro · Analise Posicional · Insights de treinamento · <span style="color:#ADF305;">Relatório Analítico Individual</span></p>
-    <div style="font-size:11px;color:#4a5568;text-align:center;margin-top:4px;letter-spacing:1px;">Versão 1.9</div>
+    <div style="font-size:11px;color:#4a5568;text-align:center;margin-top:4px;letter-spacing:1px;">Versão 2.0</div>
   </div>
 
   <div id="key-box">
@@ -21201,65 +21201,75 @@ async function montarDocx(playerName, trainingDate) {
     ];
   }
 
-  // ── 10 Seções com Por quê, Métricas e Análise dinâmica ──────────────────────
+  // ── 10 Seções com Por quê, Métricas, Referência e Análise dinâmica ──────────
   [
     { n:'1', t:'Ângulo da Raquete', s:'Topo do Swing vs. Impacto com a Bola',
       porq:'O ângulo da raquete no topo do swing determina o plano de swing e a trajetória da bola antes mesmo do contato. Um ângulo inconsistente indica falta de automatização do movimento. No impacto, pequenas variações causam grandes desvios na direção da bola — é o fator técnico com maior correlação com erros não forçados.',
       metr:'Ângulo no topo do swing (ideal: 100-115° forehand, 135-150° saque) vs. impacto (ideal: 75-90° groundstrokes). Desvio acima de 10° entre golpes do mesmo tipo indica necessidade de ajuste.',
+      ref: 'Federer e Nadal mantêm ângulo de impacto entre 80-88° no forehand com desvio inferior a 5° entre golpes consecutivos — padrão de elite para consistência máxima.',
       body:'Ângulo médio da raquete observado: '+avg(racA)+' graus. Referencial ideal no impacto: 75-90 graus (groundstrokes), 85-95 graus (saque).',
       buls:['Ângulos consistentes no impacto indicam controle motor refinado.','Variações acima de 10 graus entre golpes do mesmo tipo sugerem necessidade de ajuste técnico.']
     },
     { n:'2', t:'Ângulos do Pulso', s:'Geração de Potência e Controle',
       porq:'O lag do pulso — o atraso entre o início do swing e a liberação do pulso — é o principal gerador de velocidade da cabeça da raquete. Jogadores que empurram a bola têm variação angular muito pequena. É a diferença entre um forehand de 80km/h e um de 120km/h com o mesmo esforço físico.',
       metr:'Delta angular do pulso entre topo e contato (ideal: 12-18° forehand e saque). Abaixo de 8° indica pulso travado; acima de 22° pode indicar perda de controle.',
+      ref: 'Jogadores do Top 10 ATP apresentam delta angular de 14-17° no forehand com liberação completa do pulso no intervalo de 40-60ms antes do impacto — máxima velocidade com mínima tensão muscular.',
       body:'A progressão do ângulo do pulso do topo ao contato determina velocidade da cabeça da raquete e potência. Referencial: 160-175 graus no topo, 175-185 graus no contato.',
       buls:['Backhand: carregar o pulso na extensão durante o backswing para maior diferencial angular.','Saque: manter exercícios de pronação para preservar a mecânica de snap.']
     },
     { n:'3', t:'Rotação de Quadril e Tórax', s:'Cadeia Cinética: Swing vs. Follow-Through',
       porq:'A rotação do quadril inicia a cadeia cinética que transfere energia das pernas para o braço e finalmente para a raquete. Jogadores que jogam só de braço têm rotação insuficiente e compensam com esforço excessivo do ombro, aumentando risco de lesão e limitando potência sustentável.',
       metr:'Rotação do quadril no swing (ideal: 45-75° groundstrokes, 65-95° saque) e ganho no follow-through. A diferença entre rotação de quadril e tórax revela a eficiência da transferência de energia.',
+      ref: 'Serena Williams e Carlos Alcaraz atingem 90-100° de rotação total de quadril no follow-through do forehand — o benchmark de transferência de energia máxima para groundstrokes ofensivos.',
       body:'Rotação média de quadril: '+avg(hipR)+' graus. Referencial groundstrokes: 45-75 graus. Saque: 65-95 graus.',
       buls:['O saque deve gerar a maior rotação de quadril. Rotação insuficiente limita velocidade.','Padrão consistente entre golpes indica transferência eficiente de energia.']
     },
     { n:'4', t:'Estabilidade da Cabeça', s:'Rastreamento ao Longo do Ciclo de Swing',
       porq:'A cabeça estável é o eixo em torno do qual todo o swing acontece. Quando ela se move, o ponto de contato torna-se imprevisível e a visão da bola é prejudicada no momento mais crítico. Jogadores de elite mantêm a cabeça praticamente estática — é um dos principais diferenciadores entre nível intermediário e avançado.',
       metr:'Desvio lateral e vertical da cabeça durante o swing (ideal: menor que 2cm em ambos os eixos). Pontuação de estabilidade 0-10, sendo 8,0 o referencial profissional mínimo.',
+      ref: 'Novak Djokovic é considerado o modelo de estabilidade da cabeça no circuito — desvio lateral médio de 1,2cm e vertical de 0,9cm, mantendo o olhar fixo no ponto de contato por até 100ms após o impacto.',
       body:'Pontuação média de estabilidade: '+avg(headS)+'/10. Meta profissional: 8,0/10 ou acima. Movimento excessivo da cabeça prejudica rastreamento visual da bola.',
       buls:['Manter queixo para baixo durante a rotação evita que o ombro puxe a cabeça.','No saque, retornar ao plano neutro antes do impacto após o arremesso.']
     },
     { n:'5', t:'Movimentação dos Pés', s:'Timing, Equilíbrio e Split Step',
       porq:'O split step é o fundamento invisível do tênis — o pequeno salto sincronizado com o contato do adversário que coloca o jogador em estado de alerta máximo. Um split step atrasado compromete toda a preparação seguinte. É o erro de movimentação mais comum em alunos que chegam tarde às bolas.',
       metr:'Tempo de reação do split step em ms (ideal: abaixo de 220ms). Pontuação de timing de chegada à zona de rebatida (0-10) e pontuação de equilíbrio no contato (meta: acima de 8,0).',
+      ref: 'Profissionais do Top 50 ATP executam o split step em 180-210ms com equilíbrio de 9,0/10 no contato — permitindo cobrir 70% da quadra em menos de 2 passos após a reação.',
       body:'A movimentação dos pés determina cobertura de quadra e equilíbrio no contato. Referencial split step: abaixo de 220ms.',
       buls:['Exercícios de split step com resposta visual para reduzir tempo de reação abaixo de 220ms.','Movimentação em T-step melhora equilíbrio na aproximação da rede.']
     },
     { n:'6', t:'Flexão do Joelho', s:'Preparação vs. Contato com a Bola',
       porq:'A flexão do joelho carrega energia elástica liberada como impulso ascendente no contato, gerando força de reação ao solo — principal fonte de potência em groundstrokes e saques profissionais. Alunos com joelhos retos dependem exclusivamente do braço, limitando velocidade e sobrecarregando ombro e cotovelo.',
       metr:'Ângulo do joelho na preparação (ideal: 115-135°, sendo 180° = perna estendida) e no contato (ideal: 125-155°). O leg drive — extensão entre os dois momentos — deve ser de pelo menos 15° para indicar uso efetivo das pernas.',
+      ref: 'Rafael Nadal mantém 118° de flexão na posição de troféu do saque e 128° no forehand em corrida — leg drive de 20-25° que gera 30-40% da potência total do golpe através das pernas.',
       body:'Ângulo médio de flexão do joelho: '+avg(kneeB)+' graus (180 = totalmente estendido). Ideal: 115-135 graus prep., 125-155 graus contato.',
       buls:['Voleio: series de voleio baixo com flexão consciente do joelho abaixo da rede.','Saque: manter posição de troféu (~115 graus) mesmo sob fadiga.']
     },
     { n:'7', t:'Posição do Cotovelo no Swing', s:'Detecção de Erros Técnicos e Risco de Lesão',
       porq:'O cotovelo alto no backhand ou o chicken wing no forehand são os erros técnicos mais comuns em alunos intermediários. Medir o ângulo do cotovelo revela diretamente problemas de geração de potência e risco de lesão — o tennis elbow em 80% dos casos tem origem em mecânica incorreta do cotovelo durante o swing.',
       metr:'Ângulo do cotovelo no topo do swing (ideal: 90-120°) vs. no impacto (ideal: 160-175° no forehand). Ângulo acima de 135° no impacto do forehand indica chicken wing ativo.',
+      ref: 'No forehand moderno (Alcaraz, Sinner), o cotovelo atinge 165-172° no impacto com trajetória de aceleração contínua — eliminando completamente o chicken wing e maximizando a transferência cinética para a raquete.',
       body:'A posição do cotovelo durante o swing é indicador direto de eficiência técnica e prevenção de lesão. Ângulo ideal no impacto: 160-175° para forehand, cotovelo próximo ao corpo no backhand.',
       buls:['Forehand: cotovelo deve estar próximo à extensão no impacto — evitar dobrar o braço (chicken wing).','Backhand: cotovelo alto no topo indica falta de rotação de ombros — corrigir com exercícios de preparação.']
     },
     { n:'8', t:'Altura do Ponto de Contato', s:'Timing e Posicionamento em Relação ao Corpo',
       porq:'Onde o jogador contata a bola em relação ao corpo determina diretamente o controle direcional e a consistência. Contato atrás do corpo força o uso do pulso para compensar, gerando erros direcionais. É um dos indicadores mais reveladores de timing e posicionamento geral na quadra.',
       metr:'Distância horizontal do contato ao quadril dominante (ideal: 30-50cm à frente) e altura em relação ao centro de gravidade (ideal: entre a cintura e o ombro para forehand topspin). Desvios consistentes indicam problema de posicionamento ou timing.',
+      ref: 'O ponto de contato ideal para o forehand topspin ofensivo está 35-45cm à frente do quadril dominante e entre 5-15cm acima da cintura — zona onde 95% dos winners de forehand do Top 10 ATP são executados.',
       body:'O ponto de contato ideal fica à frente do corpo, entre cintura e ombro para o forehand topspin. Contato atrasado ou muito próximo ao corpo compromete controle direcional e potência.',
       buls:['Contato à frente do corpo permite extensão plena do braço e máxima transferência de energia.','Contato muito alto ou muito baixo indica problema de posicionamento dos pés — chegar cedo à bola.']
     },
     { n:'9', t:'Extensão do Braço no Follow-Through', s:'Completude do Swing e Potência',
       porq:'Um follow-through incompleto é o sintoma mais visível de desaceleração prematura da raquete — o jogador inconscientemente freia o swing antes do contato, reduzindo potência e spin. É extremamente comum em alunos com medo de errar. O follow-through completo é consequência, não causa — mas medi-lo revela o que aconteceu antes.',
       metr:'Ângulo de extensão do braço no ponto final do follow-through (ideal: acima de 150° para forehand moderno) e altura da raquete (ideal: acima do ombro oposto). Follow-through terminando abaixo do ombro dominante indica desaceleração prematura.',
+      ref: 'No forehand windshield wiper (padrão ATP moderno), o follow-through termina com raquete acima do ombro não-dominante, braço a 155-165° e rotação do antebraço completada — garantindo máximo topspin e absorção de impacto.',
       body:'O follow-through completo é indicador de swing acelerado até o final. Raquete deve terminar acima do ombro oposto com braço estendido (acima de 150°).',
       buls:['Follow-through curto indica freio prematuro do swing — trabalhar a confiança no golpe completo.','Exercícios de swing livre sem bola ajudam a automatizar a extensão completa do follow-through.']
     },
     { n:'10', t:'Alinhamento dos Ombros na Preparação', s:'Base da Cadeia Cinética',
       porq:'O giro de ombros na preparação define o coil — a energia armazenada antes do swing que será liberada na rotação. Ombros não girados significa golpe executado apenas com o braço, sem transferência de peso. É a base de toda a cadeia cinética. Alunos que não giram os ombros atingem um teto de potência que não pode ser superado apenas com condicionamento físico.',
       metr:'Grau de rotação dos ombros na preparação em relação à linha de base (ideal: 80-100° perpendicular à rede para forehand; 60-80° para backhand de dois mãos). Rotação abaixo de 60° no forehand indica preparação insuficiente e golpe predominantemente de braço.',
+      ref: 'Djokovic e Medvedev atingem 90-95° de rotação de ombros na preparação do forehand e 75° no backhand — criando o máximo de coil possível e permitindo descarregar toda a potência da cadeia cinética no swing.',
       body:'O alinhamento dos ombros na preparação é o primeiro passo da cadeia cinética. Rotação ideal: 80-100° perpendicular à rede para forehand, 60-80° para backhand de dois mãos.',
       buls:['Giro de ombros insuficiente é o erro raiz que limita potência em alunos intermediários.','Exercícios de shadow swing com marcação dos ombros ajudam a automatizar a rotação correta na preparação.']
     },
@@ -21269,6 +21279,15 @@ async function montarDocx(playerName, trainingDate) {
     labelFixo('Por quê', sec.porq).forEach(function(e){ children.push(e); });
     // Métricas (fixo)
     labelFixo('Métricas', sec.metr).forEach(function(e){ children.push(e); });
+    // Referência (fixo — destaque especial)
+    children.push(p([
+      t('Referência: ', {bold:true, size:21, color:'8B0000'}),
+      t(sec.ref, {size:21, color:'5C1A1A', italics:true})
+    ], {
+      spacing:{before:60, after:60},
+      alignment:AlignmentType.JUSTIFIED,
+      shading:{type:'clear', color:'auto', fill:'FFF5F5'}
+    }));
     // Análise dinâmica
     children.push(p([t('Análise:', {bold:true, size:21, color:'0B1A2E'})], {spacing:{before:80,after:40}}));
     children.push(body(sec.body));
