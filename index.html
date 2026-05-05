@@ -18,14 +18,6 @@ body{min-height:100vh;background:#060a14;font-family:'DM Sans','Segoe UI',sans-s
 .title{font-size:clamp(26px,5vw,46px);font-weight:800;background:linear-gradient(135deg,#fff 30%,#00d4ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .subtitle{color:#4a5568;font-size:13px;margin-top:10px}
 .subtitle span{color:#00A896}
-#key-box{margin-bottom:20px;background:rgba(10,14,26,0.7);border:1px solid #1e2a45;border-radius:14px;padding:18px 22px}
-.key-title{font-size:11px;color:#00d4ff;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
-.key-desc{font-size:11px;color:#4a5568;margin-bottom:10px}
-.key-desc a{color:#00A896}
-.key-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-#key-input{flex:1;min-width:240px;background:#0a0e1a;border:1px solid #1e2a45;color:#e2e8f0;padding:10px 14px;border-radius:8px;font-size:13px;font-family:monospace;outline:none}
-#key-save{background:linear-gradient(135deg,#00A896,#007a6e);border:none;color:white;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;font-family:inherit;white-space:nowrap}
-#key-status{margin-top:8px;font-size:11px;color:#4a5568}
 #upload-wrap{margin-bottom:28px}
 #upload-zone{border:2px dashed #1e2a45;border-radius:20px;padding:48px 32px;text-align:center;background:rgba(10,14,26,0.5);transition:border-color .2s,background .2s}
 #upload-zone.drag{border-color:#00d4ff;background:rgba(0,212,255,0.05)}
@@ -117,29 +109,19 @@ body{min-height:100vh;background:#060a14;font-family:'DM Sans','Segoe UI',sans-s
     <div style="width:320px;height:1px;background:white;margin:4px auto 6px auto;opacity:0.6;"></div>
     <div style="font-size:13px;font-weight:600;color:#00A896;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;text-align:center;">Powered by <span style="color:#ADF305;font-weight:800;">Victor Reinert</span></div>
     <p class="subtitle" style="color:white;">Análise quadro a quadro · Analise Posicional · Insights de treinamento · <span style="color:#ADF305;">Relatório Analítico Individual</span></p>
-    <div style="font-size:11px;color:#4a5568;text-align:center;margin-top:4px;letter-spacing:1px;">Versão 2.1</div>
-  </div>
-
-  <div id="key-box">
-    <div class="key-title">🔑 Chave da API Anthropic</div>
-    <div class="key-desc">Necessária apenas ao usar o arquivo localmente. Em <a href="https://visiontennis.netlify.app" target="_blank">visiontennis.netlify.app</a> a chave fica no servidor — não é necessário informar aqui.</div>
-    <div class="key-row">
-      <input id="key-input" type="password" placeholder="sk-ant-api03-…"/>
-      <button id="key-save">Salvar</button>
-    </div>
-    <div id="key-status"></div>
+    <div style="font-size:11px;color:#4a5568;text-align:center;margin-top:4px;letter-spacing:1px;">Versão 2.2</div>
   </div>
 
   <div id="player-box" style="margin-bottom:20px;background:rgba(10,14,26,0.7);border:1px solid #1e2a45;border-radius:14px;padding:18px 22px;">
     <div style="font-size:11px;color:#00d4ff;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;">👤 Dados do Relatório</div>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
       <div style="flex:1;min-width:200px;">
-        <label style="font-size:11px;color:#4a5568;display:block;margin-bottom:6px;">Insira o Nome do Aluno/Jogador</label>
+        <label style="font-size:11px;color:#ffffff;font-weight:700;display:block;margin-bottom:6px;">Insira o Nome do Aluno/Jogador</label>
         <input id="player-name" type="text" placeholder="Ex: Rafael Nadal"
           style="width:100%;background:#0a0e1a;border:1px solid #1e2a45;color:#e2e8f0;padding:10px 14px;border-radius:8px;font-size:13px;font-family:inherit;outline:none;"/>
       </div>
       <div style="flex:1;min-width:200px;">
-        <label style="font-size:11px;color:#4a5568;display:block;margin-bottom:6px;">Data do Treinamento</label>
+        <label style="font-size:11px;color:#ffffff;font-weight:700;display:block;margin-bottom:6px;">Data do Treinamento</label>
         <input id="training-date" type="text" placeholder="DD/MM/AAAA" maxlength="10"
           style="width:100%;background:#0a0e1a;border:1px solid #1e2a45;color:#e2e8f0;padding:10px 14px;border-radius:8px;font-size:13px;font-family:inherit;outline:none;"
           oninput="
@@ -148,6 +130,19 @@ body{min-height:100vh;background:#060a14;font-family:'DM Sans','Segoe UI',sans-s
             if(v.length>5) v=v.slice(0,5)+'/'+v.slice(5);
             this.value=v.slice(0,10);
           "/>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;">
+        <label style="font-size:11px;color:#ffffff;font-weight:700;display:block;margin-bottom:6px;">Insira o Código do Treinador</label>
+        <input id="trainer-code" type="text" placeholder="Ex: AB1234" maxlength="6"
+          style="width:100%;background:#0a0e1a;border:1px solid #1e2a45;color:#e2e8f0;padding:10px 14px;border-radius:8px;font-size:13px;font-family:monospace;outline:none;text-transform:uppercase;letter-spacing:2px;"
+          oninput="this.value=this.value.replace(/[^a-zA-Z0-9]/g,'').toUpperCase().slice(0,6);"/>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <label style="font-size:11px;color:#ffffff;font-weight:700;display:block;margin-bottom:6px;">Insira sua Senha</label>
+        <input id="trainer-password" type="password" placeholder="••••••••"
+          style="width:100%;background:#0a0e1a;border:1px solid #1e2a45;color:#e2e8f0;padding:10px 14px;border-radius:8px;font-size:13px;font-family:inherit;outline:none;"/>
       </div>
     </div>
   </div>
@@ -20326,9 +20321,6 @@ var __async = (__this, __arguments, generator) => {
 document.addEventListener('DOMContentLoaded', function() {
 
 // ── Elementos ─────────────────────────────────────────────────────────────────
-var keyInput    = document.getElementById('key-input');
-var keySave     = document.getElementById('key-save');
-var keyStatus   = document.getElementById('key-status');
 var playerNameEl  = document.getElementById('player-name');
 var trainingDateEl= document.getElementById('training-date');
 var uploadWrap  = document.getElementById('upload-wrap');
@@ -20358,7 +20350,6 @@ var btnReset   = document.getElementById('btn-reset');
 var framesGrid = document.getElementById('frames-grid');
 
 // ── Estado ────────────────────────────────────────────────────────────────────
-var apiKey = localStorage.getItem('tv_key') || '';
 var frames = [];
 var videoInfo = null;
 var appPhase = 'idle'; // idle | extracting | selecting | analyzing | done
@@ -20374,33 +20365,6 @@ var STROKE_PT  = {forehand:'Forehand',backhand:'Backhand',serve:'Saque',volley:'
 var PHASE_PT   = {preparation:'Preparação',backswing:'Backswing',contact:'Contato',follow_through:'Follow-through',recovery:'Recuperação',idle:'Parado'};
 var STROKE_COL = {forehand:'#00d4ff',backhand:'#ff6b35',serve:'#ffd700',volley:'#a855f7',overhead:'#ff4757',movement:'#2ed573',unknown:'#747d8c',none:'#2f3542'};
 var PHASE_ICON = {preparation:'⚡',backswing:'🔄',contact:'💥',follow_through:'🌊',recovery:'🔁',idle:'⏸'};
-
-// ── Auto-hide chave quando rodando no Netlify ─────────────────────────────────
-if (window.location.protocol !== 'file:') {
-  var kb = document.getElementById('key-box');
-  if (kb) kb.style.display = 'none';
-}
-
-// ── Inicializar chave ─────────────────────────────────────────────────────────
-if (apiKey) {
-  keyInput.value = apiKey;
-  keyStatus.textContent = '✅ Chave salva. Pronto para analisar.';
-  keyStatus.style.color = '#2ed573';
-}
-
-// ── Salvar chave ──────────────────────────────────────────────────────────────
-keySave.addEventListener('click', function() {
-  var k = keyInput.value.trim();
-  if (!k || k.length < 20) {
-    keyStatus.textContent = '❌ Chave inválida.';
-    keyStatus.style.color = '#ff4757';
-    return;
-  }
-  apiKey = k;
-  localStorage.setItem('tv_key', k);
-  keyStatus.textContent = '✅ Chave salva com sucesso!';
-  keyStatus.style.color = '#2ed573';
-});
 
 // ── Upload: input file oculto criado dinamicamente ────────────────────────────
 var fileInput = document.createElement('input');
@@ -20437,13 +20401,6 @@ btnPdf.addEventListener('click', gerarPDF);
 function handleFile(file) {
   if (!file.type.startsWith('video/')) {
     alert('Por favor selecione um arquivo de vídeo (MP4, MOV, AVI).');
-    return;
-  }
-  var isLocal = window.location.protocol === 'file:';
-  if (isLocal && !apiKey) {
-    keyStatus.textContent = '❌ Insira e salve sua chave da API antes de analisar.';
-    keyStatus.style.color = '#ff4757';
-    keyInput.focus();
     return;
   }
   processVideo(file);
@@ -20639,52 +20596,20 @@ async function analyzeFrame(frame) {
   }
 
   try {
-    var isLocal = window.location.protocol === 'file:';
-
-    if (isLocal) {
-      // Local: fetch direto com API key
-      var res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model: MODEL, max_tokens: 800,
-          messages: [{ role: 'user', content: [
-            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
-            { type: 'text', text: PROMPT }
-          ]}]
-        })
-      });
-      var data = await res.json();
-      if (!res.ok) { logDebug('Erro API: ' + ((data.error&&data.error.message)||res.status)); return {_error:'API error'}; }
-      var txt = '';
-      if (data.content) for (var i=0;i<data.content.length;i++) if (data.content[i].type==='text') { txt=data.content[i].text; break; }
-      var s=txt.indexOf('{'), e=txt.lastIndexOf('}');
-      if (s===-1||e===-1) { logDebug('Sem JSON: '+txt.slice(0,60)); return {_error:'Sem JSON'}; }
-      return JSON.parse(txt.slice(s, e+1));
-
-    } else {
-      // Netlify: testa qual URL está ativa e usa ela
-      var funcUrl = await testarFuncao();
-      if (!funcUrl) {
-        return { _error: 'Função não encontrada no servidor. Verifique o Netlify Dashboard > Functions.' };
+    // Sempre usa a Netlify Function — chave fica no servidor
+    var funcUrl = await testarFuncao();
+    if (!funcUrl) {
+      return { _error: 'Função não encontrada no servidor. Verifique o Netlify Dashboard > Functions.' };
+    }
+    try {
+      var r = await xhrPost(funcUrl, base64);
+      return r;
+    } catch(xhrErr) {
+      if (xhrErr.message && xhrErr.message.indexOf('400') !== -1) {
+        return { _error: 'Frame ignorado' };
       }
-      try {
-        var r = await xhrPost(funcUrl, base64);
-        return r;
-      } catch(xhrErr) {
-        // Status 400 = frame rejeitado pelo servidor (vazio/corrompido) — ignorar silenciosamente
-        if (xhrErr.message && xhrErr.message.indexOf('400') !== -1) {
-          return { _error: 'Frame ignorado' };
-        }
-        // Outros erros de rede merecem log
-        logDebug('Erro de rede: ' + xhrErr.message);
-        return { _error: xhrErr.message };
-      }
+      logDebug('Erro de rede: ' + xhrErr.message);
+      return { _error: xhrErr.message };
     }
   } catch(err) {
     logDebug('Erro: ' + err.message);
